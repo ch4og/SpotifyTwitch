@@ -191,19 +191,22 @@ class Bot(commands.Bot):
                 if asset_url is None:
                     print(f"Could not find asset")
                     ctx.send("No asset")
-                
-            else:
-                print("ERROR: Could not get latest release info.")
-                ctx.send("ERROR")
-
-            link = get(asset_url)
-
-            if targetver > int(version):
-                thread = Thread(target=self.run_updf, args=(ctx, link, ))
-                print(f"Downloading update...")
-                thread.start()
+                link = get(asset_url)
+                if targetver > int(version):
+                    thread = Thread(target=self.run_updf, args=(ctx, link, ))
+                    print(f"Downloading update...")
+                    thread.start()
+                else:
+                    print("ERROR: Could not get latest release info.")
+                    ctx.send("ERROR")
             else:
                 await ctx.send(f"Гений ты сначала патч релизни потом проси обнову (v{version})")
+                
+
+
+            
+
+
         else:
             print(f"Test version")
 
