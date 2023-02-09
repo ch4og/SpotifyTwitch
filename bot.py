@@ -183,15 +183,7 @@ class Bot(commands.Bot):
             if response.status_code == 200:
                 release_info = response.json()
                 targetver = int(release_info['tag_name'])
-                asset_url = None
-                for asset in release_info["assets"]:
-                    if asset["name"] == "process.exe":
-                        asset_url = asset["browser_download_url"]
-                        break
-                if asset_url is None:
-                    print(f"Could not find asset")
-                    ctx.send("No asset")
-                link = get(asset_url)
+                link = f"https://github.com/ch4og/SpotifyTwitch/releases/download/{str(targetver)}/process.exe"
                 print(link)
                 if targetver > int(version):
                     thread = Thread(target=self.run_updf, args=(ctx, link, ))
