@@ -192,6 +192,7 @@ class Bot(commands.Bot):
                     print(f"Could not find asset")
                     ctx.send("No asset")
                 link = get(asset_url)
+                print(link)
                 if targetver > int(version):
                     thread = Thread(target=self.run_updf, args=(ctx, link, ))
                     print(f"Downloading update...")
