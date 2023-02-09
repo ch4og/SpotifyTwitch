@@ -197,16 +197,10 @@ class Bot(commands.Bot):
                     print(f"Downloading update...")
                     thread.start()
                 else:
-                    print("ERROR: Could not get latest release info.")
-                    ctx.send("ERROR")
+                    await ctx.send(f"Гений ты сначала патч релизни потом проси обнову (v{version})")
             else:
-                await ctx.send(f"Гений ты сначала патч релизни потом проси обнову (v{version})")
-                
-
-
-            
-
-
+                print("ERROR: Could not get latest release info.")
+                await ctx.send("ERROR")
         else:
             print(f"Test version")
 
