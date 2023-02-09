@@ -16,3 +16,13 @@
    - OAuth redirect URL должны быть `http://localhost:17563/` и `http://localhost:17563`
 3. [Spotify Application](https://developer.spotify.com/dashboard/applications)
    - Установить сайт и Redirect URLs `http://localhost:8080`
+
+### `🫖` Переменные в .env
+1. SP_CLIENT
+2. SP_SECRET
+3. TW_OAUTH
+4. TW_CLIENT
+5. BOT_NICK
+6. PREFIX
+7. STREAMER
+8. DEV
