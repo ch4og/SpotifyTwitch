@@ -170,28 +170,58 @@ class Bot(commands.Bot):
                 las.append(ctx.author.name.lower())
                 await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
 
-    # def run_updf(self, ctx, link):
-    #     asyncio.run(self.updf(ctx, link))
+    def run_updf(self, ctx, link):
+        asyncio.run(self.updf(ctx, link))
 
-    # async def isup(self, ctx):
+    async def isup(self, ctx):
+        global version
+        global targetver
+        if version != "test":
+            repo = "ch4og/SpotifyTwitch"
+            url = f"https://api.github.com/repos/{repo}/releases/latest"
+            response = get(url)
+            if response.status_code == 200:
+                release_info = response.json()
+                targetver = int(release_info['tag_name'])
+                asset_url = None
+                for asset in release_info["assets"]:
+                    if asset["name"] == "process.exe":
+                        asset_url = asset["browser_download_url"]
+                        break
+                if asset_url is None:
+                    print(f"Could not find asset")
+                    ctx.send("No asset")
+                
+            else:
+                print("ERROR: Could not get latest release info.")
+                ctx.send("ERROR")
 
-    #         print(f"Test version")
+            link = get(asset_url)
 
-    # async def updf(self, ctx, link):
-    #     global targetver
-    #     global version
-    #     urllib.request.urlretrieve(link, "new.exe")
-    #     print("Done.")
-    #     if targetver % 10 == 0:
-    #         specified_datetime = datetime.datetime(2023, 1, 24)
-    #         current_datetime = datetime.datetime.now()
-    #         difference = current_datetime - specified_datetime
-    #         hours = difference.days * 24 / 8
-    #         await ctx.send(f"У бота новая юбилейная версия v{targetver}! Ему уже целых {difference.days} дней! Бот находится в разработке уже {int(hours)} часов! Спасибо за использование бота! <3")
+            if targetver > int(version):
+                thread = Thread(target=self.run_updf, args=(ctx, link, ))
+                print(f"Downloading update...")
+                thread.start()
+            else:
+                await ctx.send(f"Гений ты сначала патч релизни потом проси обнову (v{version})")
+        else:
+            print(f"Test version")
 
-    #     else:
-    #         await ctx.send(f"v{str(version)} -> v{str(targetver)}")
-    #     os._exit(0)
+    async def updf(self, ctx, link):
+        global targetver
+        global version
+        urllib.request.urlretrieve(link, "new.exe")
+        print("Done.")
+        if targetver % 10 == 0:
+            specified_datetime = datetime.datetime(2023, 1, 24)
+            current_datetime = datetime.datetime.now()
+            difference = current_datetime - specified_datetime
+            hours = difference.days * 24 / 8
+            await ctx.send(f"У бота новая юбилейная версия v{targetver}! Ему уже целых {difference.days} дней! Бот находится в разработке уже {int(hours)} часов! Спасибо за использование бота! <3")
+
+        else:
+            await ctx.send(f"v{str(version)} -> v{str(targetver)}")
+        os._exit(0)
 
     async def chat_song_request(self, ctx, song, song_uri, album: bool):
         if song_uri is None:
