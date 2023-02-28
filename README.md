@@ -1,14 +1,14 @@
-## `🎶`  spotify-twitch-requests
+##  spotify-twitch-requests
 
 #### Twitch бот на Python для управления очередью воспроизведения Spotify. 
 
-## `💻` Требования
+## Требования
 
 1. Python
 2. Аккаунт Twitch для бота
 3. Аккаунт Spotify с Premium 
 
-### `✨` Необходимо
+### Необходимо
 
 1. [Bot Token](https://twitchapps.com/tmi/)
 2. [Twitch Application](https://dev.twitch.tv/console/apps/create)
@@ -17,7 +17,7 @@
 3. [Spotify Application](https://developer.spotify.com/dashboard/applications)
    - Установить сайт и Redirect URLs `http://localhost:8080`
 
-### `🫖` Переменные в .env
+### Переменные в .env
 1. SP_CLIENT
 2. SP_SECRET
 3. TW_OAUTH
