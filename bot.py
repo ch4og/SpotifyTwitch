@@ -160,13 +160,12 @@ class Bot(commands.Bot):
             await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали.')
         else:
             sk += 1
-            if sk == vvs:
+            if sk >= vvs:
                 sp.next_track()
                 await ctx.send(f"pepeDS Скипаем...")
                 las = []
                 sk = 0
             else:
-                sk += 1
                 las.append(ctx.author.name.lower())
                 await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
 
