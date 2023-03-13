@@ -4,25 +4,25 @@
 
 ## Требования
 
-1. Python
-2. Аккаунт Twitch для бота
-3. Аккаунт Spotify с Premium 
+* Python
+* Аккаунт Twitch для бота
+* Аккаунт Spotify с Premium 
 
 ### Необходимо
 
-1. [Bot Token](https://twitchapps.com/tmi/)
-2. [Twitch Application](https://dev.twitch.tv/console/apps/create)
+* [Bot Token](https://twitchapps.com/tmi/)
+* [Twitch Application](https://dev.twitch.tv/console/apps/create)
    - Создать приложение чат-бот
    - OAuth redirect URL должны быть `http://localhost:17563/` и `http://localhost:17563`
-3. [Spotify Application](https://developer.spotify.com/dashboard/applications)
+* [Spotify Application](https://developer.spotify.com/dashboard/applications)
    - Установить сайт и Redirect URLs `http://localhost:8080`
 
 ### Переменные в .env
-1. SP_CLIENT
-2. SP_SECRET
-3. TW_OAUTH
-4. TW_CLIENT
-5. BOT_NICK
-6. PREFIX
-7. STREAMER
-8. DEV
+* `SP_CLIENT`
+* `SP_SECRET`
+* `TW_OAUTH` На самом деле это токен (https://twitchtokengenerator.com/)
+* `TW_CLIENT`
+* `BOT_NICK`
+* `PREFIX`
+* `STREAMER`
+* `DEV`
