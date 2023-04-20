@@ -6,3 +6,4 @@ BUILD.bat
 scripts/
 ndd/
 work/
+build.sh
