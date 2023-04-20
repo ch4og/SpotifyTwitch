@@ -13,6 +13,7 @@ from twitchio.ext import commands
 from yt_dlp import YoutubeDL
 from youtube_title_parse import get_artist_title
 
+# TODO: Убрать многократные проверки на тест версию бота. Написать гайд по развертыванию бота из сурсов. Переписать все try/except с учетом ошибок.
 
 sk = 0
 ls = []
