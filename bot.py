@@ -3,7 +3,6 @@ import os
 import re
 import urllib.request
 import openai
-import pycountry
 
 from requests import get
 from base64 import b64decode
@@ -56,7 +55,7 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
 
-        print(f"Бот v{str(version)} ({self.nick}) в чате {streamer_name}")
+        print(f"Бот v{str(version)} ({self.nick}) подключается к чату {streamer_name}")
 
     @commands.command(name="up")
     async def upd_command(self, ctx):
