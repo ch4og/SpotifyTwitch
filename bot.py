@@ -13,7 +13,6 @@ from twitchio.ext import commands
 from yt_dlp import YoutubeDL
 from youtube_title_parse import get_artist_title
 
-# TODO: Убрать многократные проверки на тест версию бота. Написать гайд по развертыванию бота из сурсов. Переписать все try/except с учетом ошибок.
 
 sk = 0
 ls = []
@@ -58,14 +57,12 @@ class Bot(commands.Bot):
         )
 
     async def event_ready(self):
+        print(f"{self.nick} v{str(version)} подключается к чату {streamer_name}")
         try:
-            url = f'https://raw.githubusercontent.com/{repo}/master/changes.txt'
-            response = urllib.request.urlopen(url)
-            data = response.read()
-            print(data.decode('utf-8'))
+            maxver = '.'.join(list(get(f"https://api.github.com/repos/{repo}/releases/latest").json()['tag_name']))
+            print(f"Последняя версия на данный момент - {maxver}")
         except:
             pass
-        print(f"\nБот v{str(version)} ({self.nick}) подключается к чату {streamer_name}")
 
     @commands.command(name="up")
     async def upd_command(self, ctx):
@@ -210,7 +207,7 @@ class Bot(commands.Bot):
         global intver
         global targetver
         global repo
-        if version != "t.e.s.t":
+        try:
             url = f"https://api.github.com/repos/{repo}/releases/latest"
             response = get(url)
             if response.status_code == 200:
@@ -225,6 +222,9 @@ class Bot(commands.Bot):
                     await ctx.send(f"Бот последней версии. (v{version})")
             else:
                 await ctx.send("Ошибка")
+        except: 
+            await ctx.send("Критическая ошибка!")
+
 
     async def updf(self, ctx, link):
         global targetver
