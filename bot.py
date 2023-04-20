@@ -5,7 +5,6 @@ import urllib.request
 import openai
 
 from requests import get
-from base64 import b64decode
 from threading import Thread
 from dotenv import load_dotenv
 from spotipy import Spotify
@@ -18,13 +17,17 @@ from youtube_title_parse import get_artist_title
 sk = 0
 ls = []
 load_dotenv()
+repo = "ch4og/spotify-twitch-requests"
 version = "test"
 song_playing = "AAA - AAA"
 targetver = 0
 streamer_name = os.getenv('STREAMER')
 openai.api_key = os.getenv('OPENAI')
-intver = version
-version = '.'.join(list(version))
+if (version != "test"):
+    intver = int(version)
+    version = '.'.join(list(version))
+else:
+    intver = 999
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 
 
@@ -54,14 +57,20 @@ class Bot(commands.Bot):
         )
 
     async def event_ready(self):
-
-        print(f"Бот v{str(version)} ({self.nick}) подключается к чату {streamer_name}")
+        try:
+            url = f'https://raw.githubusercontent.com/{repo}/master/changes.txt'
+            response = urllib.request.urlopen(url)
+            data = response.read()
+            print(data.decode('utf-8'))
+        except:
+            pass
+        print(f"\nБот v{str(version)} ({self.nick}) подключается к чату {streamer_name}")
 
     @commands.command(name="up")
     async def upd_command(self, ctx):
         global version
         global targetver
-        if ctx.author.name.lower() == os.getenv('DEV').lower():
+        if ctx.author.is_mod:
             await self.isup(ctx)
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
@@ -128,6 +137,7 @@ class Bot(commands.Bot):
         global song_playing
         global sk
         global las
+        global streamer_name
         try:
             data = sp.currently_playing()
             name = ', '.join([artist["name"]
@@ -148,7 +158,7 @@ class Bot(commands.Bot):
                 'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
             }
 
-            url = f'https://api.twitch.tv/helix/streams?user_login={os.getenv("STREAMER")}'
+            url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
             vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
 
             switch = {
@@ -186,34 +196,34 @@ class Bot(commands.Bot):
 
     def generate_text(self, ctx, prompt):
         input_text = prompt
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": input_text}]
-            )
-        return response['choices'][0]['message']['content'][0:300]
-
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": input_text}]
+                )
+            return response['choices'][0]['message']['content'][0:300]
+        except:
+            return "Произошла ошибка."
     async def isup(self, ctx):
         global version
-        global intversion
+        global intver
         global targetver
+        global repo
         if version != "t.e.s.t":
-            repo = "ch4og/SpotifyTwitch"
             url = f"https://api.github.com/repos/{repo}/releases/latest"
             response = get(url)
             if response.status_code == 200:
                 release_info = response.json()
                 targetver = int(release_info['tag_name'])
-                link = f"https://github.com/ \
-                        ch4og/SpotifyTwitch/releases/download/ \
-                        {str(targetver)}/process.exe"
-                if targetver > int(intversion):
+                link = f"https://github.com/{repo}/releases/download/{str(targetver)}/process.exe"
+                if targetver > int(intver):
                     thread = Thread(target=self.run_updf, args=(ctx, link, ))
                     print("Downloading update...")
                     thread.start()
                 else:
-                    await ctx.send(f"latest (v{version})")
+                    await ctx.send(f"Бот последней версии. (v{version})")
             else:
-                await ctx.send("ERROR")
+                await ctx.send("Ошибка")
 
     async def updf(self, ctx, link):
         global targetver
@@ -225,18 +235,20 @@ class Bot(commands.Bot):
 
     async def chat_song_request(self, ctx, song, song_uri, album: bool):
         if song_uri is None:
-            data = sp.search(song, limit=1, type="track", market="BY")
             try:
-                song_uri = data["tracks"]["items"][0]["uri"]
+                song_uri = sp.search(song, limit=1, type="track", market="BY")["tracks"]["items"][0]["uri"]
             except:
-                await ctx.send(f"@{ctx.author.name}, Эта песня не найдена в Spotify.")
-                return
+                try:
+                    song_uri = sp.search(song, limit=1, type="track", market="US")["tracks"]["items"][0]["uri"]
+                except:
+                    await ctx.send(f"@{ctx.author.name}, Эта песня не найдена в Spotify.")
+                    return
 
         elif re.match(URL_REGEX, song_uri):
             try:
                 data = sp.track(song_uri)
             except:
-                await ctx.send(f"@{ctx.author.name}, Ссылка не поддерживается")
+                await ctx.send(f"@{ctx.author.name}, Ссылка не поддерживается. Используйте Spotify/YouTube")
             song_uri = data["uri"]
             song_uri = song_uri.replace("spotify:track:", "")
 
@@ -258,10 +270,7 @@ class Bot(commands.Bot):
                 try:
                     sp.add_to_queue(song_uri)
                     await ctx.send(
-                        f"@{ctx.author.name}, ({song_name} - \
-                                {', '.join(song_artists_names)})  \
-                                [ {data['external_urls']['spotify']} ]  \
-                                добавлено в очередь."
+                        f"@{ctx.author.name}, {song_name} - {', '.join(song_artists_names)} добавлено в очередь."
                     )
                 except:
                     await ctx.send(f"@{ctx.author.name}, Запросы музыки временно отключены/недоступны")
@@ -271,19 +280,9 @@ def scrape_info(url):
     ydl = YoutubeDL(params={'noplaylist': True, })
     info = ydl.extract_info(url, download=False)
     artist, title = get_artist_title(info['title'])
-    print(f"{artist} - {title}")
     return f"{artist} - {title}"
 
 
-def bot_app():
+if __name__ == '__main__':
     bot = Bot()
     bot.run()
-
-
-def decode(inp):
-    return b64decode(inp).decode("utf-8")
-
-
-if __name__ == '__main__':
-
-    bot_app()
