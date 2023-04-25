@@ -1,7 +1,7 @@
 ##  spotify-twitch-requests
 
-#### Twitch бот на Python для управления очередью воспроизведения Spotify. 
-
+#### Twitch бот на Python для управления очередью воспроизведения Spotify
+##### С поддержкой gpt-3.5-turbo
 ## Требования
 
 * Python
