@@ -25,4 +25,14 @@
 * `BOT_NICK`
 * `PREFIX`
 * `STREAMER`
-* `DEV`
+* `OPENAI`
+
+#### Бот имеет плохую систему обновлений. Запускать через что-то подобное:
+
+```batch
+if exist new.exe (
+    del process.exe
+    move new.exe process.exe
+)
+process.exe 
+``` 
