@@ -7,6 +7,7 @@
 * Python
 * Аккаунт Twitch для бота
 * Аккаунт Spotify с Premium 
+* OpenAI API для команды `!gpt`
 
 ### Необходимо
 
