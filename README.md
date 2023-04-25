@@ -4,7 +4,6 @@
 ##### С поддержкой gpt-3.5-turbo
 ## Требования
 
-* Python
 * Аккаунт Twitch для бота
 * Аккаунт Spotify с Premium 
 * OpenAI API для команды `!gpt`
