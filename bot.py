@@ -150,65 +150,66 @@ class Bot(commands.Bot):
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
 
-
     @commands.command(name="skip")
     async def skip_song_command(self, ctx):
         global song_playing
         global sk
         global las
         global streamer_name
-        try:
-            data = sp.currently_playing()
-            name = ', '.join([artist["name"]
-                            for artist in data["item"]["artists"]])
-            song = data['item']['name']
-            curr = f"{name} - {song}"
+        if sp.currently_playing() is not None:
+            try:
+                data = sp.currently_playing()
+                name = ', '.join([artist["name"] for artist in data["item"]["artists"]])
+                song = data['item']['name']
+                curr = f"{name} - {song}"
 
-            if curr != song_playing:
-                song_playing = f"{name} - {song}"
-                sk = 0
-                las = []
-            else:
-                pass
-
-            vvs = 0
-            headers = {
-                'Client-ID': os.getenv('TW_CLIENT'),
-                'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
-            }
-
-            url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
-            vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
-
-            switch = {
-                0: 1,
-                1: 1,
-                2: 1,
-                3: 2,
-                4: 2,
-            }
-            vvs = switch.get(vvs, vvs//3)
-            if ctx.author.name.lower() in las:
-                if sk >= vvs:
-                    await ctx.send(f"Скипаем... ({sk}/{vvs})")
-                    sp.next_track()
-                    las = []
+                if curr != song_playing:
+                    song_playing = f"{name} - {song}"
                     sk = 0
-                else:
-                    await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({sk}/{vvs})')
-
-            else:
-                sk += 1
-                if sk >= vvs:
-                    await ctx.send(f"Скипаем... ({sk}/{vvs})")
-                    sp.next_track()
                     las = []
-                    sk = 0
                 else:
-                    las.append(ctx.author.name.lower())
-                    await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
-        except:
-            await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет либо произошла ошибка.")
+                    pass
+
+                vvs = 0
+                headers = {
+                    'Client-ID': os.getenv('TW_CLIENT'),
+                    'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
+                }
+
+                url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
+                vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
+
+                switch = {
+                    0: 1,
+                    1: 1,
+                    2: 1,
+                    3: 2,
+                    4: 2,
+                }
+                vvs = switch.get(vvs, vvs//3)
+                if ctx.author.name.lower() in las:
+                    if sk >= vvs:
+                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                        sp.next_track()
+                        las = []
+                        sk = 0
+                    else:
+                        await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({sk}/{vvs})')
+
+                else:
+                    sk += 1
+                    if sk >= vvs:
+                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                        sp.next_track()
+                        las = []
+                        sk = 0
+                    else:
+                        las.append(ctx.author.name.lower())
+                        await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
     def run_updf(self, ctx, link):
         asyncio.run(self.updf(ctx, link))
