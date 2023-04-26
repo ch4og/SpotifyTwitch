@@ -139,16 +139,47 @@ class Bot(commands.Bot):
     async def pause_song_command(self, ctx):
         if ctx.author.is_mod:
             try:
-                if sp.currently_playing() is not None:
-                    sp.pause_playback()
-                    await ctx.send(f"@{ctx.author.name}, Пауза.")
-                else:
-                    sp.start_playback()
-                    await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
+                # devics = sp.devices()['devices']
+                # for playa in range(len(devics)):
+                #     if devics[playa]["type"] == "Computer":
+                #         dev_id = devics[playa]["id"]
+                #         break
+                sp.pause_playback()
+                await ctx.send(f"@{ctx.author.name}, Пауза.")
             except:
-                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.") 
+                pass
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="resume")
+    async def resume_song_command(self, ctx):
+        if ctx.author.is_mod:
+            try:
+                sp.start_playback()
+                await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="vol")
+    async def vol_command(self, ctx, vol: str = None):
+        if ctx.author.is_mod:
+            try:
+                volume = sp.devices()["devices"][0]["volume_percent"]
+                if vol is None:
+                    await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
+                elif vol == "+":
+                    sp.volume(volume+10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume+10}%")
+                elif vol == "-":
+                    sp.volume(volume-10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume-10}%")
+                else:
+                    await ctx.send(f"@{ctx.author.name}, Используйте !vol + или !vol - для регулировки.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
 
     @commands.command(name="skip")
     async def skip_song_command(self, ctx):
