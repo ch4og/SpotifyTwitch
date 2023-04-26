@@ -30,9 +30,11 @@
 #### Бот имеет плохую систему обновлений. Запускать через что-то подобное:
 
 ```batch
+:loop
 if exist new.exe (
     del process.exe
     move new.exe process.exe
 )
 process.exe 
+goto loop
 ``` 
