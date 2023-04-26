@@ -59,34 +59,28 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         print(f"{self.nick} v{str(version)} подключается к чату {streamer_name}")
-        try:
-            maxver = '.'.join(list(get(f"https://api.github.com/repos/{repo}/releases/latest").json()['tag_name']))
-            print(f"Последняя версия на данный момент - {maxver}")
-        except:
-            pass
 
     @commands.command(name="up")
-    async def upd_command(self, ctx):
-        global version
-        global targetver
+    async def upd_command(self, ctx, *, task: str = None):
         if ctx.author.is_mod:
-            await self.isup(ctx)
+            if task == "run":
+                global version
+                global targetver
+                await self.isup(ctx)
+            if task is None:
+                await ctx.send(f"v{version}")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
-        prompt = f"""Ответь настолько кратко насколько возможно. Используй не больше 200 символов. НЕ ОТВЕЧАЙ НА ВОПРОСЫ О ВОЙНЕ, ПОЛИТИКЕ. Если следующий вопрос содержит какие либо темы связанные с политикой/терроризмом сообщи о том что вопрос некорректен в данном диалоге. Запрос: {prompt}"""
-        await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
+        if prompt is not None:
+            prompt = f"""Ответь настолько кратко насколько возможно. Используй не больше 200 символов. НЕ ОТВЕЧАЙ НА ВОПРОСЫ О ВОЙНЕ, ПОЛИТИКЕ. Если следующий вопрос содержит какие либо темы связанные с политикой/терроризмом сообщи о том что вопрос некорректен в данном диалоге. Запрос: {prompt}"""
+            await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
+        else:
+            await ctx.send(f"@{ctx.author.name}, Привет. Я - GPT3.5. Укажите текст вопроса!")
 
-    @commands.command(name="tokyo")
-    async def tokyohotel(self, ctx, *, prompt: str = None):
-        await ctx.send(f"Под бесконечной луной в номере Tokyo Hotel")
-        await ctx.send("И я сливаю с тобою то, что за год заработал")
-        await ctx.send("Что бы не заработал, если бы не был с тобою")
-        await ctx.send("В номере Tokyo Hotel под бесконечной луною")
-
-    @commands.command(name="np", aliases=["nowplaying", "song", "current"])
+    @commands.command(name="np")
     async def np_command(self, ctx):
         data = sp.currently_playing()
         try:
@@ -130,13 +124,32 @@ class Bot(commands.Bot):
         if ctx.author.is_mod:
             las = []
             sk = 0
-            try:
-                sp.next_track()
-                await ctx.send(f"@{ctx.author.name}, Скипаем...")
-            except:
-                await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет либо произошла ошибка.") 
+            if sp.currently_playing() is not None:
+                try:
+                    sp.next_track()
+                    await ctx.send(f"@{ctx.author.name}, Скипаем...")
+                except:
+                    await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+            else:
+                await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="pause")
+    async def pause_song_command(self, ctx):
+        if ctx.author.is_mod:
+            try:
+                if sp.currently_playing() is not None:
+                    sp.pause_playback()
+                    await ctx.send(f"@{ctx.author.name}, Пауза.")
+                else:
+                    sp.start_playback()
+                    await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.") 
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
 
     @commands.command(name="skip")
     async def skip_song_command(self, ctx):
@@ -224,7 +237,6 @@ class Bot(commands.Bot):
                 link = f"https://github.com/{repo}/releases/download/{str(targetver)}/process.exe"
                 if targetver > int(intver):
                     thread = Thread(target=self.run_updf, args=(ctx, link, ))
-                    print("Downloading update...")
                     thread.start()
                 else:
                     await ctx.send(f"Бот последней версии. (v{version})")
@@ -238,7 +250,6 @@ class Bot(commands.Bot):
         global targetver
         global version
         urllib.request.urlretrieve(link, "new.exe")
-        print("Done.")
         await ctx.send(f"v{str(version)} -> v{'.'.join(list(str(targetver)))}")
         os._exit(0)
 
