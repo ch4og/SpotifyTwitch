@@ -79,6 +79,13 @@ class Bot(commands.Bot):
         prompt = f"""Ответь настолько кратко насколько возможно. Используй не больше 200 символов. НЕ ОТВЕЧАЙ НА ВОПРОСЫ О ВОЙНЕ, ПОЛИТИКЕ. Если следующий вопрос содержит какие либо темы связанные с политикой/терроризмом сообщи о том что вопрос некорректен в данном диалоге. Запрос: {prompt}"""
         await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
 
+    @commands.command(name="tokyo")
+    async def tokyohotel(self, ctx, *, prompt: str = None):
+        await ctx.send(f"Под бесконечной луной в номере Tokyo Hotel")
+        await ctx.send("И я сливаю с тобою то, что за год заработал")
+        await ctx.send("Что бы не заработал, если бы не был с тобою")
+        await ctx.send("В номере Tokyo Hotel под бесконечной луною")
+
     @commands.command(name="np", aliases=["nowplaying", "song", "current"])
     async def np_command(self, ctx):
         data = sp.currently_playing()
