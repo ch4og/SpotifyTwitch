@@ -291,7 +291,7 @@ class Bot(commands.Bot):
                 try:
                     sp.add_to_queue(song_uri)
                     await ctx.send(
-                        f"@{ctx.author.name}, {song_name} - {', '.join(song_artists_names)} добавлено в очередь."
+                        f"@{ctx.author.name}, {', '.join(song_artists_names)} - {song_name} добавлено в очередь."
                     )
                 except:
                     await ctx.send(f"@{ctx.author.name}, Запросы музыки временно отключены/недоступны")
