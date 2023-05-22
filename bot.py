@@ -3,7 +3,6 @@ import os
 import re
 import urllib.request
 import openai
-
 from requests import get
 from threading import Thread
 from dotenv import load_dotenv
@@ -22,6 +21,7 @@ repo = "ch4og/spotify-twitch-requests"
 version = "test"
 song_playing = "AAA - AAA"
 targetver = 0
+lasvol = 22
 streamer_name = os.getenv('STREAMER')
 openai.api_key = os.getenv('OPENAI')
 if (version != "test"):
@@ -29,7 +29,6 @@ if (version != "test"):
     version = '.'.join(list(version))
 else:
     intver = 999
-URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 
 
 sp = Spotify(
@@ -60,26 +59,31 @@ class Bot(commands.Bot):
     async def event_ready(self):
         print(f"{self.nick} v{str(version)} подключается к чату {streamer_name}")
         try:
-            maxver = '.'.join(list(get(f"https://api.github.com/repos/{repo}/releases/latest").json()['tag_name']))
-            print(f"Последняя версия на данный момент - {maxver}")
+            print(urllib.request.urlopen("https://raw.githubusercontent.com/ch4og/spotify-twitch-requests/master/motd.txt").read().decode('utf-8'))
         except:
-            pass
+            print("Работаем")
 
     @commands.command(name="up")
-    async def upd_command(self, ctx):
-        global version
-        global targetver
+    async def upd_command(self, ctx, *, task: str = None):
         if ctx.author.is_mod:
-            await self.isup(ctx)
+            if task == "run":
+                global version
+                global targetver
+                await self.isup(ctx)
+            elif task is None:
+                await ctx.send(f"v{version}")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
-        prompt = f"""Ответь настолько кратко насколько возможно. Используй не больше 200 символов. НЕ ОТВЕЧАЙ НА ВОПРОСЫ О ВОЙНЕ, ПОЛИТИКЕ. Если следующий вопрос содержит какие либо темы связанные с политикой/терроризмом сообщи о том что вопрос некорректен в данном диалоге. Запрос: {prompt}"""
-        await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
+        if prompt is not None:
+            prompt = f"""Ты - искусственный интеллект под названием @{self.nick}. Тебя разработал @ch4ogg. Используй не более 200 символов в ответе. Запрос начинается с следущего предложения. {prompt}"""
+            await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
+        else:
+            await ctx.send(f"@{ctx.author.name}, Привет. Я - ИИ под именем @{self.nick}. Укажите текст вопроса!")
 
-    @commands.command(name="np", aliases=["nowplaying", "song", "current"])
+    @commands.command(name="np", aliases=["song"])
     async def np_command(self, ctx):
         data = sp.currently_playing()
         try:
@@ -91,30 +95,26 @@ class Bot(commands.Bot):
         except:
             await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
-
-    @commands.command(name="songrequest", aliases=["sr", "addsong", "p"])
-    async def songrequest_command(self, ctx, *, song: str = None):
+    @commands.command(name="sr", aliases=["p"])
+    async def sr_command(self, ctx, *, song: str = None):
         if song is None:
             await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
             return
         song_uri = None
         if (
-            song.startswith("spotify:track:")
-            or not song.startswith("spotify:track:")
-            and re.match(URL_REGEX, song)
-        ):
+            song.startswith("spotify:track:") or islink(song) and not song.startswith("spotify:track:")):
             nss = song
             if "youtu" in song:
                 try:
                     song = scrape_info(nss)
                 except:
                     song = nss
-                await self.chat_song_request(ctx, song, song_uri, album=False)
+                await self.chat_sr(ctx, song, song_uri)
             else:
                 song_uri = song
-                await self.chat_song_request(ctx, song, song, album=False)
+                await self.chat_sr(ctx, song, song)
         else:
-            await self.chat_song_request(ctx, song, song_uri, album=False)
+            await self.chat_sr(ctx, song, song_uri)
 
     @commands.command(name="fskip")
     async def fskip_song_command(self, ctx):
@@ -123,11 +123,70 @@ class Bot(commands.Bot):
         if ctx.author.is_mod:
             las = []
             sk = 0
+            if sp.currently_playing() is not None:
+                try:
+                    sp.next_track()
+                    await ctx.send(f"@{ctx.author.name}, Скипаем...")
+                except:
+                    await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+            else:
+                await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="pause")
+    async def pause_song_command(self, ctx):
+        if ctx.author.is_mod:
             try:
-                sp.next_track()
-                await ctx.send(f"@{ctx.author.name}, Скипаем...")
+                sp.pause_playback()
+                await ctx.send(f"@{ctx.author.name}, Пауза.")
             except:
-                await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет либо произошла ошибка.") 
+                pass
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="resume")
+    async def resume_song_command(self, ctx):
+        if ctx.author.is_mod:
+            try:
+                sp.start_playback()
+                await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="vol")
+    async def vol_command(self, ctx, vol: str = None):
+        if ctx.author.is_mod:
+            global lasvol
+            try:
+                volume = sp.devices()["devices"][0]["volume_percent"]
+                if vol is None:
+                    await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
+                elif vol == "+":
+                    sp.volume(volume+10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume+10}%")
+                elif vol == "-":
+                    sp.volume(volume-10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume-10}%")
+                elif vol == "mute":
+                    if (volume != 0):
+                        lasvol = volume
+                        sp.volume(0)
+                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на 0%")
+                    else:
+                        sp.volume(lasvol)
+                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на {lasvol}%")
+                elif vol.startswith("+") or vol.startswith("-"):
+                    if vol[1:].isnumeric():
+                        sp.volume(volume + int(vol))
+                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume + int(vol)}%")
+                else:
+                    await ctx.send(f"@{ctx.author.name}, Используйте !vol + !vol - или !vol mute для регулировки.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
 
@@ -137,58 +196,60 @@ class Bot(commands.Bot):
         global sk
         global las
         global streamer_name
-        try:
-            data = sp.currently_playing()
-            name = ', '.join([artist["name"]
-                            for artist in data["item"]["artists"]])
-            song = data['item']['name']
-            curr = f"{name} - {song}"
+        if sp.currently_playing() is not None:
+            try:
+                data = sp.currently_playing()
+                name = ', '.join([artist["name"] for artist in data["item"]["artists"]])
+                song = data['item']['name']
+                curr = f"{name} - {song}"
 
-            if curr != song_playing:
-                song_playing = f"{name} - {song}"
-                sk = 0
-                las = []
-            else:
-                pass
-
-            vvs = 0
-            headers = {
-                'Client-ID': os.getenv('TW_CLIENT'),
-                'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
-            }
-
-            url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
-            vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
-
-            switch = {
-                0: 1,
-                1: 1,
-                2: 1,
-                3: 2,
-                4: 2,
-            }
-            vvs = switch.get(vvs, vvs//3)
-            if ctx.author.name.lower() in las:
-                if sk >= vvs:
-                    await ctx.send(f"Скипаем... ({sk}/{vvs})")
-                    sp.next_track()
-                    las = []
+                if curr != song_playing:
+                    song_playing = f"{name} - {song}"
                     sk = 0
-                else:
-                    await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({sk}/{vvs})')
-
-            else:
-                sk += 1
-                if sk >= vvs:
-                    await ctx.send(f"Скипаем... ({sk}/{vvs})")
-                    sp.next_track()
                     las = []
-                    sk = 0
                 else:
-                    las.append(ctx.author.name.lower())
-                    await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
-        except:
-            await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет либо произошла ошибка.")
+                    pass
+
+                vvs = 0
+                headers = {
+                    'Client-ID': os.getenv('TW_CLIENT'),
+                    'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
+                }
+
+                url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
+                vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
+
+                switch = {
+                    0: 1,
+                    1: 1,
+                    2: 1,
+                    3: 2,
+                    4: 2,
+                }
+                vvs = switch.get(vvs, vvs//3)
+                if ctx.author.name.lower() in las:
+                    if sk >= vvs:
+                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                        sp.next_track()
+                        las = []
+                        sk = 0
+                    else:
+                        await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({sk}/{vvs})')
+
+                else:
+                    sk += 1
+                    if sk >= vvs:
+                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                        sp.next_track()
+                        las = []
+                        sk = 0
+                    else:
+                        las.append(ctx.author.name.lower())
+                        await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
     def run_updf(self, ctx, link):
         asyncio.run(self.updf(ctx, link))
@@ -203,6 +264,7 @@ class Bot(commands.Bot):
             return response['choices'][0]['message']['content'][0:300]
         except:
             return "Произошла ошибка."
+    
     async def isup(self, ctx):
         global version
         global intver
@@ -217,7 +279,6 @@ class Bot(commands.Bot):
                 link = f"https://github.com/{repo}/releases/download/{str(targetver)}/process.exe"
                 if targetver > int(intver):
                     thread = Thread(target=self.run_updf, args=(ctx, link, ))
-                    print("Downloading update...")
                     thread.start()
                 else:
                     await ctx.send(f"Бот последней версии. (v{version})")
@@ -231,11 +292,10 @@ class Bot(commands.Bot):
         global targetver
         global version
         urllib.request.urlretrieve(link, "new.exe")
-        print("Done.")
         await ctx.send(f"v{str(version)} -> v{'.'.join(list(str(targetver)))}")
         os._exit(0)
 
-    async def chat_song_request(self, ctx, song, song_uri, album: bool):
+    async def chat_sr(self, ctx, song, song_uri):
         if song_uri is None:
             try:
                 song_uri = sp.search(song, limit=1, type="track", market="BY")["tracks"]["items"][0]["uri"]
@@ -246,7 +306,7 @@ class Bot(commands.Bot):
                     await ctx.send(f"@{ctx.author.name}, Эта песня не найдена в Spotify.")
                     return
 
-        elif re.match(URL_REGEX, song_uri):
+        elif islink(song_uri):
             try:
                 data = sp.track(song_uri)
             except:
@@ -256,23 +316,21 @@ class Bot(commands.Bot):
 
         song_id = song_uri.replace("spotify:track:", "")
 
-        if not album:
-            data = sp.track(song_id)
-            song_name = data["name"]
-            song_artists = data["artists"]
-            song_artists_names = [artist["name"]
-                                  for artist in song_artists]
-            duration = data["duration_ms"] / 60000
+        data = sp.track(song_id)
+        song_name = data["name"]
+        song_artists = data["artists"]
+        song_artists_names = [artist["name"]
+                              for artist in song_artists]
+        duration = data["duration_ms"] / 60000
 
         if song_uri != "not found":
-            if duration > 17:
+            if duration > 15:
                 await ctx.send(f"@{ctx.author.name}, Трек слишком длинный.")
             else:
-
                 try:
                     sp.add_to_queue(song_uri)
                     await ctx.send(
-                        f"@{ctx.author.name}, {song_name} - {', '.join(song_artists_names)} добавлено в очередь."
+                        f"@{ctx.author.name}, {', '.join(song_artists_names)} - {song_name} добавлено в очередь."
                     )
                 except:
                     await ctx.send(f"@{ctx.author.name}, Запросы музыки временно отключены/недоступны")
@@ -284,6 +342,10 @@ def scrape_info(url):
     artist, title = get_artist_title(info['title'])
     return f"{artist} - {title}"
 
+
+def islink(song):
+    url_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    return re.match(url_regex, song)
 
 if __name__ == '__main__':
     bot = Bot()
