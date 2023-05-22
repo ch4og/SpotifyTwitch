@@ -58,10 +58,13 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         print(f"{self.nick} v{str(version)} подключается к чату {streamer_name}")
+<<<<<<< HEAD
         try:
             print(urllib.request.urlopen("https://raw.githubusercontent.com/ch4og/spotify-twitch-requests/master/motd.txt").read().decode('utf-8'))
         except:
             print("Работаем")
+=======
+>>>>>>> 67226fbd3780b98a16cad7efe802fe6ff892f190
 
     @commands.command(name="up")
     async def upd_command(self, ctx, *, task: str = None):
@@ -70,7 +73,11 @@ class Bot(commands.Bot):
                 global version
                 global targetver
                 await self.isup(ctx)
+<<<<<<< HEAD
             elif task is None:
+=======
+            if task is None:
+>>>>>>> 67226fbd3780b98a16cad7efe802fe6ff892f190
                 await ctx.send(f"v{version}")
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
@@ -78,12 +85,21 @@ class Bot(commands.Bot):
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
         if prompt is not None:
+<<<<<<< HEAD
             prompt = f"""Ты - искусственный интеллект под названием @{self.nick}. Тебя разработал @ch4ogg. Используй не более 200 символов в ответе. Запрос начинается с следущего предложения. {prompt}"""
             await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
         else:
             await ctx.send(f"@{ctx.author.name}, Привет. Я - ИИ под именем @{self.nick}. Укажите текст вопроса!")
 
     @commands.command(name="np", aliases=["song"])
+=======
+            prompt = f"""Ответь настолько кратко насколько возможно. Используй не больше 200 символов. НЕ ОТВЕЧАЙ НА ВОПРОСЫ О ВОЙНЕ, ПОЛИТИКЕ. Если следующий вопрос содержит какие либо темы связанные с политикой/терроризмом сообщи о том что вопрос некорректен в данном диалоге. Запрос: {prompt}"""
+            await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
+        else:
+            await ctx.send(f"@{ctx.author.name}, Привет. Я - GPT3.5. Укажите текст вопроса!")
+
+    @commands.command(name="np")
+>>>>>>> 67226fbd3780b98a16cad7efe802fe6ff892f190
     async def np_command(self, ctx):
         data = sp.currently_playing()
         try:
@@ -131,6 +147,7 @@ class Bot(commands.Bot):
                     await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
             else:
                 await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
+<<<<<<< HEAD
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
 
@@ -187,8 +204,56 @@ class Bot(commands.Bot):
                     await ctx.send(f"@{ctx.author.name}, Используйте !vol + !vol - или !vol mute для регулировки.")
             except:
                 await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+=======
+>>>>>>> 67226fbd3780b98a16cad7efe802fe6ff892f190
         else:
             await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="pause")
+    async def pause_song_command(self, ctx):
+        if ctx.author.is_mod:
+            try:
+                # devics = sp.devices()['devices']
+                # for playa in range(len(devics)):
+                #     if devics[playa]["type"] == "Computer":
+                #         dev_id = devics[playa]["id"]
+                #         break
+                sp.pause_playback()
+                await ctx.send(f"@{ctx.author.name}, Пауза.")
+            except:
+                pass
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="resume")
+    async def resume_song_command(self, ctx):
+        if ctx.author.is_mod:
+            try:
+                sp.start_playback()
+                await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+        else:
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+
+    @commands.command(name="vol")
+    async def vol_command(self, ctx, vol: str = None):
+        if ctx.author.is_mod:
+            try:
+                volume = sp.devices()["devices"][0]["volume_percent"]
+                if vol is None:
+                    await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
+                elif vol == "+":
+                    sp.volume(volume+10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume+10}%")
+                elif vol == "-":
+                    sp.volume(volume-10)
+                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume-10}%")
+                else:
+                    await ctx.send(f"@{ctx.author.name}, Используйте !vol + или !vol - для регулировки.")
+            except:
+                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
 
     @commands.command(name="skip")
     async def skip_song_command(self, ctx):
