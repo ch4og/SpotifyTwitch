@@ -18,17 +18,10 @@ sk = 0
 ls = []
 load_dotenv()
 repo = "ch4og/spotify-twitch-requests"
-version = "test"
 song_playing = "AAA - AAA"
-targetver = 0
 lasvol = 22
 streamer_name = os.getenv('STREAMER')
 openai.api_key = os.getenv('OPENAI')
-if (version != "test"):
-    intver = int(version)
-    version = '.'.join(list(version))
-else:
-    intver = 999
 
 
 sp = Spotify(
@@ -57,23 +50,7 @@ class Bot(commands.Bot):
         )
 
     async def event_ready(self):
-        print(f"{self.nick} v{str(version)} подключается к чату {streamer_name}")
-        try:
-            print(urllib.request.urlopen("https://raw.githubusercontent.com/ch4og/spotify-twitch-requests/master/motd.txt").read().decode('utf-8'))
-        except:
-            print("Работаем")
-
-    @commands.command(name="up")
-    async def upd_command(self, ctx, *, task: str = None):
-        if ctx.author.is_mod:
-            if task == "run":
-                global version
-                global targetver
-                await self.isup(ctx)
-            elif task is None:
-                await ctx.send(f"v{version}")
-        else:
-            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+        print(f"{self.nick} подключается к чату {streamer_name}")
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
@@ -251,8 +228,6 @@ class Bot(commands.Bot):
         else:
             await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
-    def run_updf(self, ctx, link):
-        asyncio.run(self.updf(ctx, link))
 
     def generate_text(self, ctx, prompt):
         input_text = prompt
@@ -264,36 +239,6 @@ class Bot(commands.Bot):
             return response['choices'][0]['message']['content'][0:300]
         except:
             return "Произошла ошибка."
-    
-    async def isup(self, ctx):
-        global version
-        global intver
-        global targetver
-        global repo
-        try:
-            url = f"https://api.github.com/repos/{repo}/releases/latest"
-            response = get(url)
-            if response.status_code == 200:
-                release_info = response.json()
-                targetver = int(release_info['tag_name'])
-                link = f"https://github.com/{repo}/releases/download/{str(targetver)}/process.exe"
-                if targetver > int(intver):
-                    thread = Thread(target=self.run_updf, args=(ctx, link, ))
-                    thread.start()
-                else:
-                    await ctx.send(f"Бот последней версии. (v{version})")
-            else:
-                await ctx.send("Ошибка")
-        except: 
-            await ctx.send("Критическая ошибка!")
-
-
-    async def updf(self, ctx, link):
-        global targetver
-        global version
-        urllib.request.urlretrieve(link, "new.exe")
-        await ctx.send(f"v{str(version)} -> v{'.'.join(list(str(targetver)))}")
-        os._exit(0)
 
     async def chat_sr(self, ctx, song, song_uri):
         if song_uri is None:
