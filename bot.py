@@ -12,7 +12,7 @@ from twitchio.ext import commands
 from yt_dlp import YoutubeDL
 from youtube_title_parse import get_artist_title
 
-# TODO: Убрать многократные проверки на тест версию бота. Написать гайд по развертыванию бота из сурсов. Переписать все try/except с учетом ошибок.
+# TODO: Написать гайд по развертыванию бота из сурсов. Переписать все try/except с учетом ошибок.
 
 sk = 0
 ls = []
@@ -137,31 +137,15 @@ class Bot(commands.Bot):
     @commands.command(name="vol")
     async def vol_command(self, ctx, vol: str = None):
         if ctx.author.is_mod:
-            global lasvol
             try:
                 volume = sp.devices()["devices"][0]["volume_percent"]
                 if vol is None:
                     await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
-                elif vol == "+":
-                    sp.volume(volume+10)
-                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume+10}%")
-                elif vol == "-":
-                    sp.volume(volume-10)
-                    await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume-10}%")
-                elif vol == "mute":
-                    if (volume != 0):
-                        lasvol = volume
-                        sp.volume(0)
-                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на 0%")
-                    else:
-                        sp.volume(lasvol)
-                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на {lasvol}%")
-                elif vol.startswith("+") or vol.startswith("-"):
-                    if vol[1:].isnumeric():
-                        sp.volume(volume + int(vol))
-                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на {volume + int(vol)}%")
+                elif vol.isnumeric():
+                        sp.volume(int(vol))
+                        await ctx.send(f"@{ctx.author.name}, Громкость установлена на {vol}%")
                 else:
-                    await ctx.send(f"@{ctx.author.name}, Используйте !vol + !vol - или !vol mute для регулировки.")
+                    await ctx.send(f"@{ctx.author.name}, Используйте !vol число для регулировки.")
             except:
                 await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
         else:
