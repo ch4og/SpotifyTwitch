@@ -64,7 +64,7 @@ class Bot(commands.Bot):
     @commands.command(name="np", aliases=["song"])
     async def np_command(self, ctx):
         data = sp.currently_playing()
-        if ctx.channel.is_live:
+        if await ctx.channel.is_live():
             try:
                 song_artists = data["item"]["artists"]
                 song_artists_names = [artist["name"] for artist in song_artists]
