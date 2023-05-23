@@ -64,17 +64,14 @@ class Bot(commands.Bot):
     @commands.command(name="np", aliases=["song"])
     async def np_command(self, ctx):
         data = sp.currently_playing()
-        if await ctx.channel.is_live():
-            try:
-                song_artists = data["item"]["artists"]
-                song_artists_names = [artist["name"] for artist in song_artists]
-                await ctx.send(
-                    f"@{ctx.author.name}, Сейчас играет {', '.join(song_artists_names)} - {data['item']['name']}"
-                )
-            except:
-                await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
-        else:
-            await ctx.send(f"@{ctx.author.name}, Сейчас не идет стрим.")
+        try:
+            song_artists = data["item"]["artists"]
+            song_artists_names = [artist["name"] for artist in song_artists]
+            await ctx.send(
+                f"@{ctx.author.name}, Сейчас играет {', '.join(song_artists_names)} - {data['item']['name']}"
+            )
+        except:
+            await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
     @commands.command(name="sr", aliases=["p"])
     async def sr_command(self, ctx, *, song: str = None):
