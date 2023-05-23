@@ -3,6 +3,8 @@ import os
 import re
 import urllib.request
 import openai
+import twitchio
+
 from requests import get
 from threading import Thread
 from dotenv import load_dotenv
@@ -19,7 +21,6 @@ ls = []
 load_dotenv()
 repo = "ch4og/spotify-twitch-requests"
 song_playing = "AAA - AAA"
-lasvol = 22
 streamer_name = os.getenv('STREAMER')
 openai.api_key = os.getenv('OPENAI')
 
@@ -142,6 +143,8 @@ class Bot(commands.Bot):
                 if vol is None:
                     await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
                 elif vol.isnumeric():
+                        if (int(vol) > 100): 
+                            vol = 100
                         sp.volume(int(vol))
                         await ctx.send(f"@{ctx.author.name}, Громкость установлена на {vol}%")
                 else:
