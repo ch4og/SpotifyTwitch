@@ -57,7 +57,7 @@ class Bot(commands.Bot):
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
         if prompt is not None:
-            prompt = f"""Ты - искусственный интеллект под названием @{self.nick}. Тебя разработал @ch4ogg. Используй не более 200 символов в ответе. Запрос начинается с следущего предложения. {prompt}"""
+            prompt = f"""Ты - искусственный интеллект под названием @{self.nick}. Ты находишься в чате на платформе Twitch. Тебя разработал @ch4ogg. Используй не более 200 символов в ответе. Запрос начинается с следущего предложения. {prompt}"""
             await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
         else:
             await ctx.send(f"@{ctx.author.name}, Привет. Я - ИИ под именем @{self.nick}. Укажите текст вопроса!")
