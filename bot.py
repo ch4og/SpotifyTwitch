@@ -54,6 +54,11 @@ class Bot(commands.Bot):
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
+    async def event_error(self, ctx, error):
+        print(f"Error: {error}")
+        await asyncio.sleep(60) # wait for 60 seconds before reconnecting
+        await self._ws.reconnect() # attempt to reconnect to Twitch
+
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
         if prompt is not None:
