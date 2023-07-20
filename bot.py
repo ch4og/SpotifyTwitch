@@ -83,7 +83,7 @@ class Bot(commands.Bot):
     @commands.command(name="sr", aliases=["p"])
     async def sr_command(self, ctx, *, song: str = None):
         if song is None:
-            #await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
+            await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
             return
         song_uri = None
         if (
