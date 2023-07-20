@@ -231,7 +231,7 @@ class Bot(commands.Bot):
                 messages=[{"role": "user", "content": input_text}]
                 )
             return response['choices'][0]['message']['content'][0:300]
-        except Exception as e: print(e)
+        except Exception as e: 
             return f"Произошла ошибка. {e}"
 
     async def chat_sr(self, ctx, song, song_uri):
