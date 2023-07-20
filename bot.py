@@ -232,7 +232,7 @@ class Bot(commands.Bot):
                 )
             return response['choices'][0]['message']['content'][0:300]
         except Exception as e: print(e)
-        return f"Произошла ошибка. {e}"
+            return f"Произошла ошибка. {e}"
 
     async def chat_sr(self, ctx, song, song_uri):
         if song_uri is None:
