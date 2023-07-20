@@ -54,6 +54,7 @@ class Bot(commands.Bot):
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
+
     async def event_error(self, ctx, error):
         print(f"Error: {error}")
         await asyncio.sleep(60) # wait for 60 seconds before reconnecting
@@ -82,7 +83,7 @@ class Bot(commands.Bot):
     @commands.command(name="sr", aliases=["p"])
     async def sr_command(self, ctx, *, song: str = None):
         if song is None:
-            await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
+            #await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
             return
         song_uri = None
         if (
@@ -230,8 +231,8 @@ class Bot(commands.Bot):
                 messages=[{"role": "user", "content": input_text}]
                 )
             return response['choices'][0]['message']['content'][0:300]
-        except:
-            return "Произошла ошибка."
+        except Exception as e: print(e)
+        return f"Произошла ошибка. {e}"
 
     async def chat_sr(self, ctx, song, song_uri):
         if song_uri is None:
