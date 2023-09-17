@@ -52,18 +52,17 @@ class Bot(commands.Bot):
             initial_channels=[streamer_name],
         )
 
+        # Add the error handler for CommandNotFound
+        self.add_error_handler(CommandNotFound, self.handle_command_not_found)
+
+    # Define the error handler function
+    async def handle_command_not_found(self, ctx, error):
+        await ctx.send(f"Command not found: {error.argument}")
+        
+
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
-
-    async def event_error(self, ctx, error):
-        print(f"Error: {error}")
-        await asyncio.sleep(60) # wait for 60 seconds before reconnecting
-        await self._ws.reconnect() # attempt to reconnect to Twitch
-    
-
-    async def handle_command_not_found(ctx, error):
-        await ctx.send(f"Command not found: {error.argument}")
 
 
     @commands.command(name="gpt")
