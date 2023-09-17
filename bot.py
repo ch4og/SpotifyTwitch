@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from twitchio.ext import commands
-from twitchio.ext.commands import CommandNotFound
+from twitchio.ext.commands.errors import CommandNotFound
 from yt_dlp import YoutubeDL
 from youtube_title_parse import get_artist_title
 
