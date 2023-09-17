@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from twitchio.ext import commands
-from twitchio.ext.commands import CommandNotFound
+from twitchio.ext.commands.errors import CommandNotFound
 from yt_dlp import YoutubeDL
 from youtube_title_parse import get_artist_title
 
@@ -51,21 +51,17 @@ class Bot(commands.Bot):
             timeout=120,
             initial_channels=[streamer_name],
         )
+        
 
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
-
-    async def event_error(self, ctx, error):
-        print(f"Error: {error}")
-        await asyncio.sleep(60) # wait for 60 seconds before reconnecting
-        await self._ws.reconnect() # attempt to reconnect to Twitch
-    
-
-    async def handle_command_not_found(ctx, error):
-        await ctx.send(f"Command not found: {error.argument}")
-
-    bot.add_error_handler(CommandNotFound, handle_command_not_found)
+    async def event_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send(f"Command not found: {ctx.message.content}")
+        else:
+            # Handle other command errors as needed
+            pass
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
