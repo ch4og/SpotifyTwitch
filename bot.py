@@ -58,7 +58,7 @@ class Bot(commands.Bot):
 
     async def event_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send(f"Command not found: {ctx.message.content}")
+            pass
         else:
             # Handle other command errors as needed
             pass
