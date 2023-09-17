@@ -65,7 +65,6 @@ class Bot(commands.Bot):
     async def handle_command_not_found(ctx, error):
         await ctx.send(f"Command not found: {error.argument}")
 
-    bot.add_error_handler(CommandNotFound, handle_command_not_found)
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
