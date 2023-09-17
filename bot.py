@@ -51,19 +51,17 @@ class Bot(commands.Bot):
             timeout=120,
             initial_channels=[streamer_name],
         )
-
-        # Add the error handler for CommandNotFound
-        self.add_error_handler(CommandNotFound, self.handle_command_not_found)
-
-    # Define the error handler function
-    async def handle_command_not_found(self, ctx, error):
-        await ctx.send(f"Command not found: {error.argument}")
         
 
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
-
+    async def event_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send(f"Command not found: {ctx.message.content}")
+        else:
+            # Handle other command errors as needed
+            pass
 
     @commands.command(name="gpt")
     async def gpt_command(self, ctx, *, prompt: str = None):
