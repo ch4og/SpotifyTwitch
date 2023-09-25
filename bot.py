@@ -48,7 +48,7 @@ class Bot(commands.Bot):
             client_id=os.getenv('TW_CLIENT'),
             nick=os.getenv('BOT_NICK'),
             prefix=os.getenv('PREFIX'),
-            timeout=120,
+            timeout=999,
             initial_channels=[streamer_name],
         )
         
