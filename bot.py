@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 import asyncio
 import os
 import re
@@ -52,15 +54,17 @@ class Bot(commands.Bot):
             initial_channels=[streamer_name],
         )
         
-
     async def event_ready(self):
         print(f"{self.nick} подключается к чату {streamer_name}")
 
     async def event_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             pass
+        elif isinstance(error, asyncio.TimeoutError):
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"{current_time}: Timeout occurred. Retrying connection...")
+            time.sleep(3)  # Wait for 3 seconds before retrying
         else:
-            # Handle other command errors as needed
             pass
 
     @commands.command(name="gpt")
