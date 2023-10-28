@@ -4,7 +4,6 @@ import asyncio
 import os
 import re
 import urllib.request
-import openai
 import twitchio
 
 from requests import get
@@ -66,14 +65,6 @@ class Bot(commands.Bot):
             time.sleep(3)  # Wait for 3 seconds before retrying
         else:
             pass
-
-    @commands.command(name="gpt")
-    async def gpt_command(self, ctx, *, prompt: str = None):
-        if prompt is not None:
-            prompt = f"""Ты - искусственный интеллект под названием @{self.nick}. Ты находишься в чате на платформе Twitch. Тебя разработал @{os.getenv("DEV")}. Используй не более 200 символов в ответе. Запрос начинается с следущего предложения. {prompt}"""
-            await ctx.send(f"@{ctx.author.name}, {self.generate_text(ctx, prompt)}")
-        else:
-            await ctx.send(f"@{ctx.author.name}, Привет. Я - ИИ под именем @{self.nick}. Укажите текст вопроса!")
 
     @commands.command(name="np", aliases=["song"])
     async def np_command(self, ctx):
