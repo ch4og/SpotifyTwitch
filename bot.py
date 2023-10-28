@@ -24,7 +24,7 @@ load_dotenv()
 repo = "ch4og/spotify-twitch-requests"
 song_playing = "AAA - AAA"
 streamer_name = os.getenv('STREAMER')
-openai.api_key = os.getenv('OPENAI')
+
 
 
 sp = Spotify(
@@ -221,16 +221,6 @@ class Bot(commands.Bot):
             await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
 
-    def generate_text(self, ctx, prompt):
-        input_text = prompt
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": input_text}]
-                )
-            return response['choices'][0]['message']['content'][0:300]
-        except Exception as e: 
-            return f"Произошла ошибка. {e}"
 
     async def chat_sr(self, ctx, song, song_uri):
         if song_uri is None:
