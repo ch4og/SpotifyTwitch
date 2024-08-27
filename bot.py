@@ -1,11 +1,12 @@
 import time
-from datetime import datetime
 import asyncio
 import os
 import re
 import urllib.request
 import twitchio
+import aiohttp
 
+from datetime import datetime
 from requests import get
 from threading import Thread
 from dotenv import load_dotenv
@@ -18,14 +19,7 @@ from youtube_title_parse import get_artist_title
 
 # TODO: Написать гайд по развертыванию бота из сурсов. Переписать все try/except с учетом ошибок.
 
-sk = 0
-ls = []
 load_dotenv()
-repo = "ch4og/spotify-twitch-requests"
-song_playing = "AAA - AAA"
-streamer_name = os.getenv('STREAMER')
-
-
 
 sp = Spotify(
     auth_manager=SpotifyOAuth(
@@ -41,46 +35,35 @@ sp = Spotify(
     )
 )
 
-
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(
-            token=os.getenv('TW_OAUTH'),
-            client_id=os.getenv('TW_CLIENT'),
-            nick=os.getenv('BOT_NICK'),
-            prefix=os.getenv('PREFIX'),
-            timeout=999,
-            initial_channels=[streamer_name],
+            token = os.getenv('TW_OAUTH'),
+            client_id = os.getenv('TW_CLIENT'),
+            nick = os.getenv('BOT_NICK'),
+            prefix = os.getenv('PREFIX'),
+            timeout = 99,
+            initial_channels = [os.getenv('STREAMER')],
+            song_playing = "AAA - AAA",
+            las = [],
+            sk = 0,
         )
         
     async def event_ready(self):
-        print(f"{self.nick} подключается к чату {streamer_name}")
-
-    async def event_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            pass
-        elif isinstance(error, asyncio.TimeoutError):
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"{current_time}: Timeout occurred. Retrying connection...")
-            time.sleep(3)  # Wait for 3 seconds before retrying
-        else:
-            pass
+        print(f"{self.nick} подключается к чату {self.initial_channels[0]}")
 
     @commands.command(name="np", aliases=["song"])
     async def np_command(self, ctx):
-        data = sp.currently_playing()
         try:
-            song_artists = data["item"]["artists"]
-            song_artists_names = [artist["name"] for artist in song_artists]
-            await ctx.send(
-                f"@{ctx.author.name}, Сейчас играет {', '.join(song_artists_names)} - {data['item']['name']}"
-            )
+            artist = ', '.join([artist["name"] for artist in sp.currently_playing()["item"]["artists"]])
+            track = data['item']['name']
+            await ctx.send(f"@{ctx.author.name}, Сейчас играет {artist} - {track}")
         except:
             await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
     @commands.command(name="sr", aliases=["p"])
     async def sr_command(self, ctx, *, song: str = None):
-        if song is None:
+        if not song:
             await ctx.send(f"@{ctx.author.name}, Укажите название/ссылку на песню!")
             return
         song_uri = None
@@ -89,7 +72,7 @@ class Bot(commands.Bot):
             nss = song
             if "youtu" in song:
                 try:
-                    song = scrape_info(nss)
+                    song = scrape_info(song)
                 except:
                     song = nss
                 await self.chat_sr(ctx, song, song_uri)
@@ -101,21 +84,19 @@ class Bot(commands.Bot):
 
     @commands.command(name="fskip")
     async def fskip_song_command(self, ctx):
-        global sk
-        global las
         if ctx.author.is_mod:
-            las = []
-            sk = 0
-            if sp.currently_playing() is not None:
+            self.las = []
+            self.sk = 0
+            if sp.currently_playing():
                 try:
                     sp.next_track()
                     await ctx.send(f"@{ctx.author.name}, Скипаем...")
                 except:
-                    await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+                    await generate_response(ctx, "error")
             else:
                 await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
         else:
-            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+            await generate_response(ctx, "no_perm")
 
     @commands.command(name="pause")
     async def pause_song_command(self, ctx):
@@ -124,21 +105,9 @@ class Bot(commands.Bot):
                 sp.pause_playback()
                 await ctx.send(f"@{ctx.author.name}, Пауза.")
             except:
-                pass
-                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+                await generate_response(ctx, "error")
         else:
-            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
-
-    @commands.command(name="resume")
-    async def resume_song_command(self, ctx):
-        if ctx.author.is_mod:
-            try:
-                sp.start_playback()
-                await ctx.send(f"@{ctx.author.name}, Воспроизведение.")
-            except:
-                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
-        else:
-            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+            await generate_response(ctx, "no_perm")
 
     @commands.command(name="vol")
     async def vol_command(self, ctx, vol: str = None):
@@ -148,82 +117,81 @@ class Bot(commands.Bot):
                 if vol is None:
                     await ctx.send(f"@{ctx.author.name}, Громкость: {volume}%")
                 elif vol.isnumeric():
-                        if (int(vol) > 100): 
-                            vol = 100
                         sp.volume(int(vol))
                         await ctx.send(f"@{ctx.author.name}, Громкость установлена на {vol}%")
                 else:
                     await ctx.send(f"@{ctx.author.name}, Используйте !vol число для регулировки.")
             except:
-                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+                await generate_response(ctx, "error")
         else:
-            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+            await generate_response(ctx, "no_perm")
 
     @commands.command(name="skip")
     async def skip_song_command(self, ctx):
-        global song_playing
-        global sk
-        global las
-        global streamer_name
-        if sp.currently_playing() is not None:
+        if sp.currently_playing():
             try:
                 data = sp.currently_playing()
                 name = ', '.join([artist["name"] for artist in data["item"]["artists"]])
                 song = data['item']['name']
                 curr = f"{name} - {song}"
 
-                if curr != song_playing:
-                    song_playing = f"{name} - {song}"
-                    sk = 0
-                    las = []
+                if curr != self.song_playing:
+                    self.song_playing = f"{name} - {song}"
+                    self.sk = 0
+                    self.las = []
                 else:
                     pass
 
-                vvs = 0
+                viewer_count = 0
                 headers = {
                     'Client-ID': os.getenv('TW_CLIENT'),
                     'Authorization': f"Bearer {os.getenv('TW_OAUTH')}",
                 }
 
-                url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
-                vvs = get(url, headers=headers).json()['data'][0]['viewer_count']
+                url = f'https://api.twitch.tv/helix/streams?user_login={self.initial_channels[0]}'
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, headers=headers) as resp:
+                        data = await resp.json()
+                        viewer_count = data['data'][0]['viewer_count']
 
-                switch = {
-                    0: 1,
-                    1: 1,
-                    2: 1,
-                    3: 2,
-                    4: 2,
-                }
-                vvs = switch.get(vvs, vvs//3)
-                if ctx.author.name.lower() in las:
-                    if sk >= vvs:
-                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                if viewer_count <= 2: viewer_count = 1
+                elif viewer_count <= 4: viewer_count = 2
+                else: viewer_count //= 3
+                
+                if ctx.author.name.lower() in self.las:
+                    if self.sk >= viewer_count:
+                        await ctx.send(f"Скипаем... ({self.sk}/{viewer_count})")
                         sp.next_track()
-                        las = []
-                        sk = 0
+                        self.las = []
+                        self.sk = 0
                     else:
-                        await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({sk}/{vvs})')
+                        await ctx.send(f'@{ctx.author.name}, Вы уже проголосовали ({self.sk}/{viewer_count})')
 
                 else:
-                    sk += 1
-                    if sk >= vvs:
-                        await ctx.send(f"Скипаем... ({sk}/{vvs})")
+                    self.sk += 1
+                    if self.sk >= viewer_count:
+                        await ctx.send(f"Скипаем... ({self.sk}/{viewer_count})")
                         sp.next_track()
-                        las = []
-                        sk = 0
+                        self.las = []
+                        self.sk = 0
                     else:
-                        las.append(ctx.author.name.lower())
-                        await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({sk}/{vvs})')
+                        self.las.append(ctx.author.name.lower())
+                        await ctx.send(f'@{ctx.author.name}, Вы проголосовали за скип. ({self.sk}/{viewer_count})')
             except:
-                await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+                await generate_response(ctx, "error")
         else:
             await ctx.send(f"@{ctx.author.name}, Сейчас ничего не играет.")
 
 
+    async def generate_response(self, ctx, result):
+        if (result == "no_perm"):
+            await ctx.send(f"@{ctx.author.name}, У тебя нет прав на эту команду!")
+        elif (result == "error"):
+            await ctx.send(f"@{ctx.author.name}, Произошла ошибка.")
+
 
     async def chat_sr(self, ctx, song, song_uri):
-        if song_uri is None:
+        if not song_uri:
             try:
                 song_uri = sp.search(song, limit=1, type="track", market="BY")["tracks"]["items"][0]["uri"]
             except:
@@ -246,8 +214,7 @@ class Bot(commands.Bot):
         data = sp.track(song_id)
         song_name = data["name"]
         song_artists = data["artists"]
-        song_artists_names = [artist["name"]
-                              for artist in song_artists]
+        song_artists_names = [artist["name"] for artist in song_artists]
         duration = data["duration_ms"] / 60000
 
         if song_uri != "not found":
